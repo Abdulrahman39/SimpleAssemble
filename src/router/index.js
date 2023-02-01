@@ -160,6 +160,11 @@ const router = createRouter({
             component: () => import('@/views/pages/auth/Login.vue')
         },
         {
+            path: '/auth/signup',
+            name: 'signup',
+            component: () => import('@/views/pages/auth/Signup.vue')
+        },
+        {
             path: '/auth/access',
             name: 'accessDenied',
             component: () => import('@/views/pages/auth/Access.vue')
@@ -168,8 +173,33 @@ const router = createRouter({
             path: '/auth/error',
             name: 'error',
             component: () => import('@/views/pages/auth/Error.vue')
-        }
+        },
+        {
+            path: '/:pathMatch(.*)*',
+            component: () => import('@/views/pages/NotFound.vue')
+        },
+        {
+            path: '/user/products',
+            name: 'products',
+            component: () => import('@/views/Products.vue')
+        },
     ]
+});
+function isAuth() {
+    const token = window.localStorage.getItem('Token');
+    if (token == 'null' || token == '' || token == null || token == undefined) return false;
+    else return true;
+}
+router.beforeEach((to, from, next) => {
+    if (isAuth()) {
+        next();
+        return;
+    }
+
+    if (to.name == 'login' || to.name == 'signup') next();
+    else {
+        next({ name: 'login' });
+    }
 });
 
 export default router;
