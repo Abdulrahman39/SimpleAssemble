@@ -15,11 +15,14 @@
         "primeflex": "^3.2.1",
         "primeicons": "^6.0.1",
         "primevue": "^3.22.1",
+        "qrcode.js": "^0.0.1",
+        "qrcodejs": "^1.0.0",
         "vue": "^3.2.41",
         "vue-router": "^4.1.5"
     },
     "devDependencies": {
         "@rushstack/eslint-patch": "^1.1.4",
+        "@types/qrcodejs": "^1.0.0",
         "@vitejs/plugin-vue": "^3.1.2",
         "@vue/eslint-config-prettier": "^7.0.0",
         "eslint": "^8.22.0",

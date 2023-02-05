@@ -9,9 +9,14 @@ const router = createRouter({
             component: AppLayout,
             children: [
                 {
-                    path: '/',
-                    name: 'dashboard',
+                    path: '/dashboard',
+                    name: 'Dashboard',
                     component: () => import('@/views/Dashboard.vue')
+                },
+                {
+                    path: '/',
+                    name: 'main page',
+                    component: () => import('@/views/MainPage.vue')
                 },
                 {
                     path: '/uikit/formlayout',
@@ -65,9 +70,9 @@ const router = createRouter({
                     component: () => import('@/views/uikit/Overlay.vue')
                 },
                 {
-                    path: '/uikit/media',
-                    name: 'media',
-                    component: () => import('@/views/uikit/Media.vue')
+                    path: '/Products/:id',
+                    name: 'Product info',
+                    component: () => import('@/views/uikit/ProductInfo.vue')
                 },
                 {
                     path: '/uikit/menu',
@@ -132,9 +137,9 @@ const router = createRouter({
                     component: () => import('@/views/pages/Empty.vue')
                 },
                 {
-                    path: '/pages/crud',
-                    name: 'crud',
-                    component: () => import('@/views/pages/Crud.vue')
+                    path: '/products',
+                    name: 'Products',
+                    component: () => import('@/views/pages/Products.vue')
                 },
                 {
                     path: '/documentation',
@@ -178,11 +183,8 @@ const router = createRouter({
             path: '/:pathMatch(.*)*',
             component: () => import('@/views/pages/NotFound.vue')
         },
-        {
-            path: '/user/products',
-            name: 'products',
-            component: () => import('@/views/Products.vue')
-        },
+
+
     ]
 });
 function isAuth() {
@@ -196,7 +198,7 @@ router.beforeEach((to, from, next) => {
         return;
     }
 
-    if (to.name == 'login' || to.name == 'signup') next();
+    if (to.name == 'login' || to.name == 'signup' || to.name == 'main page' || to.name == 'Product info') next();
     else {
         next({ name: 'login' });
     }

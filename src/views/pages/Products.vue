@@ -1,3 +1,4 @@
+
 <script setup>
 import { FilterMatchMode } from 'primevue/api';
 import { ref, onMounted, onBeforeMount } from 'vue';
@@ -5,7 +6,7 @@ import ProductService from '@/service/ProductService';
 import { useToast } from 'primevue/usetoast';
 import { useLayout } from '@/layout/composables/layout';
 import axios from 'axios';
-
+// import QRCodeJS from 'qrcodejs';
 const toast = useToast();
 const { contextPath } = useLayout();
 const imageF = ref([])
@@ -24,11 +25,24 @@ const statuses = ref([
     { label: 'OUTOFSTOCK', value: 'outofstock' }
 ]);
 
-
-const category = ref([])
-
-const productService = new ProductService();
-const uid = window.localStorage.getItem("uid")
+// var qrcode = new QRCodeJS(document.getElementById("qrcode"), {
+	// width : 100
+	// height : 100
+// });
+// function makeCode () {		
+// 	var elText ='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.js';
+	
+// 	if (!elText) {
+// 		alert("Input a text");
+// 		elText.focus();
+// 		return;
+// 	}
+	
+// 	qrcode.makeCode(elText);
+// }
+// makeCode ()
+ const category = ref([])
+ const uid = window.localStorage.getItem("uid")
 onBeforeMount(() => {
     initFilters();
 });
@@ -59,7 +73,7 @@ onMounted(async () => {
 });
 
 async function Data() {
-    await axios.get(`https://simple-assemble-af150-default-rtdb.firebaseio.com/products/${uid}.json`).then((data) => {
+    await axios.get(`https://simple-assemble-af150-default-rtdb.firebaseio.com/products/${uid}.json`).then( (data) => {
         const allP = []
         const res = data.data
         for (const key in res) {
@@ -76,16 +90,34 @@ async function Data() {
 
         }
         products.value = allP
-        console.log(allP, product.value)
-
+        console.log(product.value)
+        
 
     });
 }
-const formatCurrency = (value) => {
-    return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-};
+
+
+function toDataURL(url, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+        var reader = new FileReader();
+        reader.onloadend = function () {
+            callback(reader.result);
+        }
+        reader.readAsDataURL(xhr.response);
+    };
+    xhr.open('GET', url);
+    xhr.responseType = 'blob';
+    xhr.send();
+}
 const onSelectedFiles = (event) => {
-    imageF.value = event.files;
+    for (const key in event.files) {
+        toDataURL(event.files[key].objectURL, (data) => {
+            imageF.value.push(data)
+        })
+
+    }
+
 };
 const openNew = () => {
     product.value = {};
@@ -108,7 +140,7 @@ const saveProduct = async () => {
                 'Authorization': window.localStorage.getItem("Token"),
                 'Content-Type': 'application/json',
             };
-            const data = {
+            const Pdata = {
                 name: product.value.name,
                 description: product.value.description,
                 category: product.value.category,
@@ -116,14 +148,16 @@ const saveProduct = async () => {
                 videoLink: product.value.videoLink,
 
             }
-            console.log(data, imageF.value[0].name, "VVVVVVVVVVVVVVVVVVVVVVVVVV")
-            await axios.post(`https://simple-assemble-af150-default-rtdb.firebaseio.com/products/${uid}.json`, data, { headers }).then((data) => {
+            await axios.post(`https://simple-assemble-af150-default-rtdb.firebaseio.com/products/${uid}.json`, Pdata, { headers }).then(async (data) => {
                 product.value.id = data.data.name;
+
                 products.value.push(product.value);
-                Data()
+                await axios.post(`https://simple-assemble-af150-default-rtdb.firebaseio.com/AllProducts/${product.value.id}.json`, Pdata, { headers }).then( () => {})
+
                 toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Created', life: 3000 });
             })
-
+             Data();
+             location.reload() 
         }
         productDialog.value = false;
         product.value = {};
@@ -193,6 +227,7 @@ const initFilters = () => {
     <div class="grid">
         <div class="col-12">
             <div class="card">
+
                 <Toast />
                 <Toolbar class="mb-4">
                     <template v-slot:start>
@@ -240,24 +275,24 @@ const initFilters = () => {
                     <Column field="description" header="Description" :sortable="true"
                         headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">
-                            <span class="p-column-title">Name</span>
+                            <span class="p-column-title">Description</span>
                             {{ slotProps.data.description }}
                         </template>
                     </Column>
                     <Column header="image" headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">
                             <span class="p-column-title">Image</span>
-                            <Galleria :value="slotProps.images" :responsiveOptions="responsiveOptions" :numVisible="5"
+                            <img :src="slotProps.data.images[0]" alt="Product Image"
+                                style="width: 100%; display: block;" />
+                            <!-- <Galleria :value="slotProps.data.images" :responsiveOptions="responsiveOptions" :numVisible="5"
                                 :circular="true" containerStyle="max-width: 140px" :showItemNavigators="true">
                                 <template #item="slotProps">
-                                    <img :src="slotProps.item.itemImageSrc" :alt="slotProps.item.alt"
+                                    <img :src="slotProps.data" alt="Product Image"
                                         style="width: 100%; display: block;" />
+                                        
                                 </template>
-                                <template #thumbnail="slotProps">
-                                    <img :src="slotProps.item.thumbnailImageSrc" :alt="slotProps.item.alt"
-                                        style="display: block;" />
-                                </template>
-                            </Galleria>
+                            
+                            </Galleria> -->
                         </template>
                     </Column>
                     <Column header="video" headerStyle="width:14%; min-width:10rem;">
@@ -271,25 +306,16 @@ const initFilters = () => {
                         headerStyle="width:14%; min-width:10rem;">
                         <template #body="slotProps">
                             <span class="p-column-title">Category</span>
-                            {{ slotProps.data.category }}
+                            {{ slotProps.data.category.toString() }}
                         </template>
                     </Column>
 
 
-                    <!-- <Column field="inventoryStatus" header="Status" :sortable="true"
-                        headerStyle="width:14%; min-width:10rem;">
-                        <template #body="slotProps">
-                            <span class="p-column-title">Status</span>
-                            <span
-                                :class="'product-badge status-' + (slotProps.data.inventoryStatus ? slotProps.data.inventoryStatus.toLowerCase() : '')">{{
-                                slotProps.data.inventoryStatus }}</span>
-                        </template>
-                    </Column> -->
                     <Column headerStyle="min-width:10rem;">
                         <template #body="slotProps">
                             <Button icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2"
                                 @click="editProduct(slotProps.data)" />
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-warning mt-2"
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-danger mt-2"
                                 @click="confirmDeleteProduct(slotProps.data)" />
                         </template>
                     </Column>
@@ -307,7 +333,6 @@ const initFilters = () => {
                     <div class="field">
                         <label for="description">Description</label>
                         <Textarea id="description" v-model="product.description" required="true" rows="3" cols="20" />
-                        <!-- <small class="p-invalid" v-if="submitted && !product.description">Name is required.</small> -->
                     </div>
 
 
@@ -334,7 +359,6 @@ const initFilters = () => {
                         <label for="price" :class="{ 'p-invalid': submitted && !product.price }">Images</label>
                         <FileUpload name="imageF" :multiple="true" :maxFileSize="1000000" :fileLimit="3"
                             @select="onSelectedFiles" />
-                        <small class="p-invalid" v-if="submitted && !product.images">Images are required.</small>
                     </div>
                     <div class="field">
                         <label for="video">video Link</label>
@@ -375,7 +399,6 @@ const initFilters = () => {
         </div>
     </div>
 </template>
-
 <style scoped lang="scss">
 @import '@/assets/demo/styles/badges.scss';
 </style>

@@ -66,7 +66,17 @@ function checkData() {
 }
 
 
+async function addUser(){
+    const headers = {
+                'Authorization': window.localStorage.getItem("Token"),
+                'Content-Type': 'application/json',
+            };
+            const data = {
+              uid: window.localStorage.getItem("uid")
 
+            }
+    await axios.post(`https://simple-assemble-af150-default-rtdb.firebaseio.com/users/users.json`,data).then(() => {});
+}
 async function signup(e) {
     e.preventDefault();
     if (checkData()) {
@@ -91,6 +101,8 @@ async function signup(e) {
 
         if (res.status == 200) {
             window.localStorage.setItem('Token', res.data.idToken);
+            window.localStorage.setItem('uid', res.data.localId);
+            await addUser();
             router.push('/');
         }
 
